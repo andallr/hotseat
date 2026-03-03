@@ -76,11 +76,8 @@ export default function AssessmentPage() {
   }, [router]);
 
   const transcribeAudio = async (audioBlob: Blob): Promise<string> => {
-    const extMap: Record<string, string> = {
-      "audio/webm": "webm", "video/webm": "webm",
-      "audio/mp4": "mp4", "video/mp4": "mp4",
-    };
-    const ext = extMap[audioBlob.type.split(";")[0]] || "webm";
+    const baseType = audioBlob.type.split(";")[0].toLowerCase();
+    const ext = baseType.includes("mp4") ? "mp4" : "webm";
     const formData = new FormData();
     formData.append("audio", audioBlob, `audio.${ext}`);
 
@@ -195,26 +192,9 @@ export default function AssessmentPage() {
       setTimeLeft(60);
       setPhase("recording");
 
-      const getSupportedMimeType = () => {
-        const types = [
-          "audio/webm;codecs=opus",
-          "audio/webm",
-          "video/webm;codecs=opus",
-          "video/webm",
-          "video/mp4",
-        ];
-        for (const type of types) {
-          if (MediaRecorder.isTypeSupported(type)) return type;
-        }
-        return "";
-      };
-
-      const mimeType = getSupportedMimeType();
       let mr: MediaRecorder;
       try {
-        mr = mimeType
-          ? new MediaRecorder(stream, { mimeType })
-          : new MediaRecorder(stream);
+        mr = new MediaRecorder(stream);
       } catch (err) {
         console.error("MediaRecorder init failed:", err);
         return;
@@ -226,12 +206,17 @@ export default function AssessmentPage() {
       };
 
       mr.onstop = () => {
-        const blobType = mimeType || "audio/webm";
-        const audioBlob = new Blob(chunksRef.current, { type: blobType });
+        const audioBlob = new Blob(chunksRef.current, { type: mr.mimeType || "video/webm" });
         processRecording(audioBlob, qIndex);
       };
 
-      mr.start(1000);
+      try {
+        mr.start(1000);
+      } catch (err) {
+        console.error("MediaRecorder.start() failed:", err);
+        setPhase("waiting");
+        return;
+      }
 
       // Timer
       timerRef.current = setInterval(() => {

@@ -55,52 +55,26 @@ export default function PracticePage() {
     setRecordingState("done");
   }, []);
 
-  const getSupportedMimeType = () => {
-    const types = [
-      "audio/webm;codecs=opus",
-      "audio/webm",
-      "video/webm;codecs=opus",
-      "video/webm",
-      "video/mp4",
-    ];
-    for (const type of types) {
-      if (MediaRecorder.isTypeSupported(type)) return type;
-    }
-    return ""; // Let browser pick
-  };
-
   const startRecording = useCallback(() => {
     if (!stream) return;
 
     const chunks: BlobPart[] = [];
     let mr: MediaRecorder;
     try {
-      const mimeType = getSupportedMimeType();
-      mr = mimeType
-        ? new MediaRecorder(stream, { mimeType })
-        : new MediaRecorder(stream);
-    } catch (err) {
-      console.error("MediaRecorder init failed:", err);
-      // Still allow continuing — just mark done without recording
-      setRecordingState("done");
-      return;
-    }
-
-    mr.ondataavailable = (e) => {
-      if (e.data.size > 0) chunks.push(e.data);
-    };
-
-    mr.onstop = () => {
-      // Practice — just discard the recording
-      setRecordingState("done");
-    };
-
-    mediaRecorderRef.current = mr;
-    try {
+      // Let the browser choose the codec — don't force audio-only mimeType
+      // on a video+audio stream, which Chrome rejects
+      mr = new MediaRecorder(stream);
+      mr.ondataavailable = (e) => {
+        if (e.data.size > 0) chunks.push(e.data);
+      };
+      mr.onstop = () => {
+        setRecordingState("done");
+      };
+      mediaRecorderRef.current = mr;
       mr.start(1000);
     } catch (err) {
-      console.error("MediaRecorder.start() failed:", err);
-      setRecordingError("Could not start recording. Try refreshing and allowing mic access.");
+      console.error("MediaRecorder failed:", err);
+      setRecordingError(`Recording error: ${String(err)}. Try Chrome and allow mic/camera access.`);
       return;
     }
     setRecordingError(null);
