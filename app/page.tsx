@@ -1,65 +1,100 @@
-import Image from "next/image";
+"use client";
 
-export default function Home() {
+import { useState } from "react";
+import { useRouter } from "next/navigation";
+
+export default function LandingPage() {
+  const router = useRouter();
+  const [studentId, setStudentId] = useState("");
+  const [courseId, setCourseId] = useState("");
+  const [error, setError] = useState("");
+
+  const handleBegin = (e: React.FormEvent) => {
+    e.preventDefault();
+    setError("");
+
+    if (!studentId.trim() || !courseId.trim()) {
+      setError("Both fields are required.");
+      return;
+    }
+
+    // Store in sessionStorage for use across pages
+    sessionStorage.setItem("hotseat_student_id", studentId.trim());
+    sessionStorage.setItem("hotseat_course_id", courseId.trim());
+    sessionStorage.setItem("hotseat_started_at", new Date().toISOString());
+
+    router.push("/setup");
+  };
+
   return (
-    <div className="flex min-h-screen items-center justify-center bg-zinc-50 font-sans dark:bg-black">
-      <main className="flex min-h-screen w-full max-w-3xl flex-col items-center justify-between py-32 px-16 bg-white dark:bg-black sm:items-start">
-        <Image
-          className="dark:invert"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={100}
-          height={20}
-          priority
-        />
-        <div className="flex flex-col items-center gap-6 text-center sm:items-start sm:text-left">
-          <h1 className="max-w-xs text-3xl font-semibold leading-10 tracking-tight text-black dark:text-zinc-50">
-            To get started, edit the page.tsx file.
-          </h1>
-          <p className="max-w-md text-lg leading-8 text-zinc-600 dark:text-zinc-400">
-            Looking for a starting point or more instructions? Head over to{" "}
-            <a
-              href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Templates
-            </a>{" "}
-            or the{" "}
-            <a
-              href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Learning
-            </a>{" "}
-            center.
-          </p>
+    <main className="min-h-screen flex flex-col items-center justify-center px-4">
+      {/* Header */}
+      <div className="mb-12 text-center">
+        <div className="flex items-center justify-center gap-3 mb-4">
+          <div className="w-3 h-3 rounded-full bg-red-500"></div>
+          <h1 className="text-4xl font-bold tracking-tight text-white">HotSeat</h1>
         </div>
-        <div className="flex flex-col gap-4 text-base font-medium sm:flex-row">
-          <a
-            className="flex h-12 w-full items-center justify-center gap-2 rounded-full bg-foreground px-5 text-background transition-colors hover:bg-[#383838] dark:hover:bg-[#ccc] md:w-[158px]"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Image
-              className="dark:invert"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={16}
-              height={16}
+        <p className="text-slate-400 text-lg max-w-md">
+          Verbal Formative Assessment. Answer with your voice. No AI assistance.
+        </p>
+      </div>
+
+      {/* Form Card */}
+      <div className="w-full max-w-md bg-[#111827] border border-slate-700 rounded-xl p-8 shadow-2xl">
+        <h2 className="text-xl font-semibold text-white mb-6">Begin Your Assessment</h2>
+
+        <form onSubmit={handleBegin} className="space-y-5">
+          <div>
+            <label htmlFor="studentId" className="block text-sm font-medium text-slate-300 mb-2">
+              Student ID
+            </label>
+            <input
+              id="studentId"
+              type="text"
+              value={studentId}
+              onChange={(e) => setStudentId(e.target.value)}
+              placeholder="e.g. S-12345"
+              className="w-full px-4 py-3 bg-[#1f2937] border border-slate-600 rounded-lg text-white placeholder-slate-500 focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500 transition"
+              autoComplete="off"
             />
-            Deploy Now
-          </a>
-          <a
-            className="flex h-12 w-full items-center justify-center rounded-full border border-solid border-black/[.08] px-5 transition-colors hover:border-transparent hover:bg-black/[.04] dark:border-white/[.145] dark:hover:bg-[#1a1a1a] md:w-[158px]"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
+          </div>
+
+          <div>
+            <label htmlFor="courseId" className="block text-sm font-medium text-slate-300 mb-2">
+              Course ID
+            </label>
+            <input
+              id="courseId"
+              type="text"
+              value={courseId}
+              onChange={(e) => setCourseId(e.target.value)}
+              placeholder="e.g. MED-101"
+              className="w-full px-4 py-3 bg-[#1f2937] border border-slate-600 rounded-lg text-white placeholder-slate-500 focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500 transition"
+              autoComplete="off"
+            />
+          </div>
+
+          {error && (
+            <p className="text-red-400 text-sm bg-red-950/40 border border-red-800 rounded-lg px-4 py-2">
+              {error}
+            </p>
+          )}
+
+          <button
+            type="submit"
+            className="w-full py-3 px-6 bg-blue-600 hover:bg-blue-500 text-white font-semibold rounded-lg transition duration-150 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 focus:ring-offset-[#111827]"
           >
-            Documentation
-          </a>
-        </div>
-      </main>
-    </div>
+            Begin Assessment →
+          </button>
+        </form>
+      </div>
+
+      {/* Info Footer */}
+      <div className="mt-8 max-w-md text-center text-slate-500 text-sm">
+        <p>
+          This assessment requires camera and microphone access. Ensure you are in a quiet location before proceeding.
+        </p>
+      </div>
+    </main>
   );
 }

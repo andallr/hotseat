@@ -1,36 +1,99 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# HotSeat — Verbal Formative Assessment App
 
-## Getting Started
+**Arena:** GSD Learning Systems  
+**Slack:** #proj-hotseat (C0AJ46VT4NP)  
+**Status:** MVP Complete
 
-First, run the development server:
+## What It Is
+
+HotSeat is an anti-AI-cheating formative assessment tool for college courses. Students answer timed verbal questions via webcam — no typing, no AI assistance possible. Responses are auto-transcribed via OpenAI Whisper and scored by content area using Claude.
+
+## Student Flow
+
+1. **Landing page** — Enter Student ID + Course ID
+2. **Setup screen** — Webcam + mic permission check
+3. **Practice question** — Ungraded, tests mic/cam
+4. **Begin Assessment** — Once clicked, no stopping
+5. **5 questions** — One at a time, 60-second countdown each
+6. **Auto-advances** — Timer hits 0, next question loads
+7. **Assessment Complete** — PDF report generated
+
+## Hardcoded Demo (Medical Assistant — Week 3: Vital Signs)
+
+1. Describe the correct technique for measuring blood pressure.
+2. What is the normal resting heart rate range for an adult?
+3. Explain the difference between systolic and diastolic pressure.
+4. At what temperature reading would you consider a patient to have a fever?
+5. Name three factors that can affect a patient's blood pressure reading.
+
+**Content Areas:** Vital Signs Measurement, Normal Values, Cardiovascular Physiology, Patient Assessment Factors
+
+## Tech Stack
+
+- **Next.js 15** (App Router)
+- **OpenAI Whisper** for transcription
+- **Anthropic Claude** (claude-3-haiku) for scoring
+- **MediaRecorder API** for webcam/audio capture
+- **jsPDF** for PDF report generation
+- **Tailwind CSS** — dark, clinical styling
+
+## Setup
+
+### 1. Clone & Install
+
+```bash
+git clone https://github.com/andallr/hotseat.git
+cd hotseat
+npm install
+```
+
+### 2. Environment Variables
+
+Create `.env.local` in the project root:
+
+```env
+OPENAI_API_KEY=your_openai_api_key_here
+ANTHROPIC_API_KEY=your_anthropic_api_key_here
+```
+
+### 3. Run Locally
 
 ```bash
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+Open [http://localhost:3000](http://localhost:3000).
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+### 4. Build
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+```bash
+npm run build
+```
 
-## Learn More
+## PDF Report Format
 
-To learn more about Next.js, take a look at the following resources:
+- Header: HotSeat Assessment Report
+- Student ID, Course ID, Date/Time
+- Score summary (correct / partial / incorrect)
+- Content area breakdown with concept gap flags
+- Per-question: question text, transcription, score, notes
+- Footer: reviewer disclaimer
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+## Integrity Features
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+- **Tab switch detection** — logs to session, surfaced in PDF report
+- **No pause/back** — once assessment starts, it runs to completion
+- **Webcam active throughout** — visual deterrent
 
-## Deploy on Vercel
+## Roadmap (v2)
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+- [ ] Supabase session persistence
+- [ ] Admin panel (instructor dashboard)
+- [ ] LMS grade passback (Moodle/Canvas)
+- [ ] Custom question sets per course
+- [ ] Webcam frame capture for facial verification
+- [ ] Multi-language support
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+## GSD Product Angle
+
+Allied health schools need this. Sell as SaaS — per-seat or per-institution pricing.
