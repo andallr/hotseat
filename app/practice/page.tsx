@@ -52,15 +52,36 @@ export default function PracticePage() {
     setRecordingState("done");
   }, []);
 
+  const getSupportedMimeType = () => {
+    const types = [
+      "audio/webm;codecs=opus",
+      "audio/webm",
+      "video/webm;codecs=opus",
+      "video/webm",
+      "video/mp4",
+    ];
+    for (const type of types) {
+      if (MediaRecorder.isTypeSupported(type)) return type;
+    }
+    return ""; // Let browser pick
+  };
+
   const startRecording = useCallback(() => {
     if (!stream) return;
 
     const chunks: BlobPart[] = [];
-    const mr = new MediaRecorder(stream, {
-      mimeType: MediaRecorder.isTypeSupported("audio/webm;codecs=opus")
-        ? "audio/webm;codecs=opus"
-        : "audio/webm",
-    });
+    let mr: MediaRecorder;
+    try {
+      const mimeType = getSupportedMimeType();
+      mr = mimeType
+        ? new MediaRecorder(stream, { mimeType })
+        : new MediaRecorder(stream);
+    } catch (err) {
+      console.error("MediaRecorder init failed:", err);
+      // Still allow continuing — just mark done without recording
+      setRecordingState("done");
+      return;
+    }
 
     mr.ondataavailable = (e) => {
       if (e.data.size > 0) chunks.push(e.data);

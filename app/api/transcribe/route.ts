@@ -18,8 +18,18 @@ export async function POST(req: NextRequest) {
     const arrayBuffer = await audioFile.arrayBuffer();
     const buffer = Buffer.from(arrayBuffer);
 
-    // Create a File object with proper name/type for Whisper
-    const file = new File([buffer], "audio.webm", { type: audioFile.type || "audio/webm" });
+    // Derive file extension from mime type so Whisper parses it correctly
+    const mimeType = audioFile.type || "audio/webm";
+    const extMap: Record<string, string> = {
+      "audio/webm": "webm",
+      "video/webm": "webm",
+      "audio/mp4": "mp4",
+      "video/mp4": "mp4",
+      "audio/ogg": "ogg",
+      "audio/wav": "wav",
+    };
+    const ext = extMap[mimeType.split(";")[0]] || "webm";
+    const file = new File([buffer], `audio.${ext}`, { type: mimeType });
 
     const transcription = await openai.audio.transcriptions.create({
       file,

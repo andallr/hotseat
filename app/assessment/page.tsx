@@ -76,8 +76,13 @@ export default function AssessmentPage() {
   }, [router]);
 
   const transcribeAudio = async (audioBlob: Blob): Promise<string> => {
+    const extMap: Record<string, string> = {
+      "audio/webm": "webm", "video/webm": "webm",
+      "audio/mp4": "mp4", "video/mp4": "mp4",
+    };
+    const ext = extMap[audioBlob.type.split(";")[0]] || "webm";
     const formData = new FormData();
-    formData.append("audio", audioBlob, "audio.webm");
+    formData.append("audio", audioBlob, `audio.${ext}`);
 
     const resp = await fetch("/api/transcribe", {
       method: "POST",
@@ -190,11 +195,30 @@ export default function AssessmentPage() {
       setTimeLeft(60);
       setPhase("recording");
 
-      const mimeType = MediaRecorder.isTypeSupported("audio/webm;codecs=opus")
-        ? "audio/webm;codecs=opus"
-        : "audio/webm";
+      const getSupportedMimeType = () => {
+        const types = [
+          "audio/webm;codecs=opus",
+          "audio/webm",
+          "video/webm;codecs=opus",
+          "video/webm",
+          "video/mp4",
+        ];
+        for (const type of types) {
+          if (MediaRecorder.isTypeSupported(type)) return type;
+        }
+        return "";
+      };
 
-      const mr = new MediaRecorder(stream, { mimeType });
+      const mimeType = getSupportedMimeType();
+      let mr: MediaRecorder;
+      try {
+        mr = mimeType
+          ? new MediaRecorder(stream, { mimeType })
+          : new MediaRecorder(stream);
+      } catch (err) {
+        console.error("MediaRecorder init failed:", err);
+        return;
+      }
       mediaRecorderRef.current = mr;
 
       mr.ondataavailable = (e) => {
@@ -202,7 +226,8 @@ export default function AssessmentPage() {
       };
 
       mr.onstop = () => {
-        const audioBlob = new Blob(chunksRef.current, { type: mimeType });
+        const blobType = mimeType || "audio/webm";
+        const audioBlob = new Blob(chunksRef.current, { type: blobType });
         processRecording(audioBlob, qIndex);
       };
 
