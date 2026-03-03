@@ -11,6 +11,8 @@ export default function PracticePage() {
   const [recordingState, setRecordingState] = useState<RecordingState>("idle");
   const [timeLeft, setTimeLeft] = useState(60);
   const [stream, setStream] = useState<MediaStream | null>(null);
+  const [recordingError, setRecordingError] = useState<string | null>(null);
+  const [streamLoading, setStreamLoading] = useState(true);
   const videoRef = useRef<HTMLVideoElement>(null);
   const mediaRecorderRef = useRef<MediaRecorder | null>(null);
   const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
@@ -27,6 +29,7 @@ export default function PracticePage() {
       .getUserMedia({ video: true, audio: true })
       .then((s) => {
         setStream(s);
+        setStreamLoading(false);
         if (videoRef.current) {
           videoRef.current.srcObject = s;
         }
@@ -93,7 +96,14 @@ export default function PracticePage() {
     };
 
     mediaRecorderRef.current = mr;
-    mr.start(1000);
+    try {
+      mr.start(1000);
+    } catch (err) {
+      console.error("MediaRecorder.start() failed:", err);
+      setRecordingError("Could not start recording. Try refreshing and allowing mic access.");
+      return;
+    }
+    setRecordingError(null);
     setRecordingState("recording");
     setTimeLeft(60);
 
@@ -161,16 +171,35 @@ export default function PracticePage() {
           <p className="text-white text-xl leading-relaxed">{PRACTICE_QUESTION.text}</p>
         </div>
 
+        {/* Error */}
+        {recordingError && (
+          <div className="bg-red-950/40 border border-red-800 rounded-xl p-4 text-red-300 text-sm">
+            ⚠ {recordingError}
+          </div>
+        )}
+
         {/* Controls */}
         <div className="flex gap-4">
           {recordingState === "idle" && (
             <button
               onClick={startRecording}
-              disabled={!stream}
-              className="flex-1 py-4 bg-red-600 hover:bg-red-500 disabled:opacity-50 text-white font-bold rounded-xl transition flex items-center justify-center gap-2"
+              disabled={!stream || streamLoading}
+              className="flex-1 py-4 bg-red-600 hover:bg-red-500 disabled:bg-slate-700 disabled:cursor-not-allowed text-white font-bold rounded-xl transition flex items-center justify-center gap-2"
             >
-              <div className="w-3 h-3 rounded-full bg-white"></div>
-              Start Speaking
+              {streamLoading ? (
+                <>
+                  <svg className="animate-spin w-4 h-4" fill="none" viewBox="0 0 24 24">
+                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"/>
+                    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"/>
+                  </svg>
+                  Initializing camera...
+                </>
+              ) : (
+                <>
+                  <div className="w-3 h-3 rounded-full bg-white"></div>
+                  Start Speaking
+                </>
+              )}
             </button>
           )}
 
